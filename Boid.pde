@@ -1,57 +1,54 @@
-
-// Boid.pde
-
 class Boid {
-    protected PVector position;
-    protected PVector velocity;
+    private PVector position;
+    private PVector velocity;
     private PVector acceleration;
-    protected final float r;
+    private final float radius;
     private final float maxForce;
     private final float maxSpeed;
-    
+
     Boid(float x, float y) {
         acceleration = new PVector(0, 0);
         float angle = random(TWO_PI);
         velocity = new PVector(cos(angle), sin(angle));
         position = new PVector(x, y);
-        r = 2.0;
-        maxSpeed = 2;
-        maxForce = 0.03;
+        radius = 2.0f;
+        maxSpeed = 2.0f;
+        maxForce = 0.03f;
     }
-    
-    void run(ArrayList<Boid> boids) {
+
+    void run(ArrayList<Boid> boids, color flockColor) {
         flock(boids);
         updatePosition();
-        borders();
-        render();
+        wrapAroundBorders();
+        render(flockColor);
     }
-    
+
     protected void applyForce(PVector force) {
         acceleration.add(force);
     }
-    
+
     private void flock(ArrayList<Boid> boids) {
-        PVector sep = separate(boids);
-        PVector ali = align(boids);
-        PVector coh = cohesion(boids);
-        
-        sep.mult(1.5);
-        ali.mult(1.0);
-        coh.mult(1.0);
-        
-        applyForce(sep);
-        applyForce(ali);
-        applyForce(coh);
+        PVector separationForce = getSeparationForce(boids);
+        PVector alignmentForce = getAlignmentForce(boids);
+        PVector cohesionForce = getCohesionForce(boids);
+
+        separationForce.mult(1.5f);
+        alignmentForce.mult(1.0f);
+        cohesionForce.mult(1.0f);
+
+        applyForce(separationForce);
+        applyForce(alignmentForce);
+        applyForce(cohesionForce);
     }
-    
+
     protected void updatePosition() {
         velocity.add(acceleration);
         velocity.limit(maxSpeed);
         position.add(velocity);
         acceleration.mult(0);
     }
-    
-    protected PVector seek(PVector target) {
+
+    protected PVector seekTarget(PVector target) {
         PVector desired = PVector.sub(target, position);
         desired.normalize();
         desired.mult(maxSpeed);
@@ -59,75 +56,77 @@ class Boid {
         steer.limit(maxForce);
         return steer;
     }
-    
-    protected void render() {
+
+    protected void render(color flockColor) {
         float theta = velocity.heading2D() + radians(90);
-        fill(255, 0, 0);
+        fill(flockColor);
         stroke(255);
         pushMatrix();
         translate(position.x, position.y);
         rotate(theta);
-        beginShape(TRIANGLES);
-        vertex(0, -r * 2);
-        vertex( -r, r * 2);
-        vertex(r, r * 2);
-        endShape();
+        renderBoidShape();
         popMatrix();
     }
-    
-    protected void borders() {
-        if (position.x < - r) position.x = width + r;
-        if (position.y < - r) position.y = height + r;
-        if (position.x > width + r) position.x = -r;
-        if (position.y > height + r) position.y = -r;
+
+    private void renderBoidShape() {
+        beginShape(TRIANGLES);
+
+        vertex(0, -radius * 2);
+        vertex(-radius, radius * 2);
+        vertex(radius, radius * 2);
+
+        endShape();
     }
-    
-    private PVector separate(ArrayList<Boid> boids) {
+
+    protected void wrapAroundBorders() {
+        if (position.x < -radius) position.x = width + radius;
+        if (position.y < -radius) position.y = height + radius;
+        if (position.x > width + radius) position.x = -radius;
+        if (position.y > height + radius) position.y = -radius;
+    }
+
+    protected PVector getSeparationForce(ArrayList<Boid> boids) {
         float desiredSeparation = 25.0f;
-        PVector steer = new PVector(0, 0, 0);
+        PVector steer = new PVector(0, 0);
         int count = 0;
-        
+
         for (Boid other : boids) {
-            float d = PVector.dist(position, other.position);
-            if (d > 0 && d < desiredSeparation) {
+            float distance = PVector.dist(position, other.position);
+            if (distance > 0 && distance < desiredSeparation) {
                 PVector diff = PVector.sub(position, other.position);
                 diff.normalize();
-                diff.div(d);
+                diff.div(distance);
                 steer.add(diff);
                 count++;
             }
         }
-        
+
         if (count > 0) {
-            steer.div((float) count);
-            if (steer.mag() > 0) {
-                steer.normalize();
-                steer.mult(maxSpeed);
-                steer.sub(velocity);
-                steer.limit(maxForce);
-            }
+            steer.div(count);
+            steer.setMag(maxSpeed);
+            steer.sub(velocity);
+            steer.limit(maxForce);
         }
-        
+
         return steer;
     }
-    
-    private PVector align(ArrayList<Boid> boids) {
-        float neighborDist = 50;
+
+    protected PVector getAlignmentForce(ArrayList<Boid> boids) {
+        float neighborDistance = 50.0f;
         PVector sum = new PVector(0, 0);
         int count = 0;
-        
+
         for (Boid other : boids) {
-            float d = PVector.dist(position, other.position);
-            if (d > 0 && d < neighborDist) {
+            float distance = PVector.dist(position, other.position);
+            if (distance > 0 && distance < neighborDistance) {
                 sum.add(other.velocity);
                 count++;
             }
         }
-        
+
         if (count > 0) {
-            sum.div((float) count);
-            sum.normalize();
-            sum.mult(maxSpeed);
+            sum.div(count);
+            sum.setMag(maxSpeed);
             PVector steer = PVector.sub(sum, velocity);
             steer.limit(maxForce);
             return steer;
@@ -135,23 +134,23 @@ class Boid {
             return new PVector(0, 0);
         }
     }
-    
-    private PVector cohesion(ArrayList<Boid> boids) {
-        float neighborDist = 50;
+
+    protected PVector getCohesionForce(ArrayList<Boid> boids) {
+        float neighborDistance = 50.0f;
         PVector sum = new PVector(0, 0);
         int count = 0;
-        
+
         for (Boid other : boids) {
-            float d = PVector.dist(position, other.position);
-            if (d > 0 && d < neighborDist) {
+            float distance = PVector.dist(position, other.position);
+            if (distance > 0 && distance < neighborDistance) {
                 sum.add(other.position);
                 count++;
             }
         }
-        
+
         if (count > 0) {
             sum.div(count);
-            return seek(sum);
+            return seekTarget(sum);
         } else {
             return new PVector(0, 0);
         }

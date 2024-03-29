@@ -1,28 +1,36 @@
-Flock regularFlock;
-Flock playerControlledFlock;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
-final int BOIDS = 10;
-final int PLAYER_BOIDS = 10;
+Flock[] flocks;
+
+final int N_FLOCKS = 5; // Number of flocks including the player
+final int BOIDS = 100;
 
 void setup() {
-    size(640, 360);
+    size(800, 800);
+    surface.setTitle("Flock Off");
+    setupCounter();
 
-    regularFlock = new Flock();
-    playerControlledFlock = new Flock();
-
-    // Add regular boids
-    for (int i = 0; i < BOIDS; i++) {
-        regularFlock.addBoid(new Boid(width/2, height/2));
-    }
-
-    // Add player-controlled boid
-    for (int i = 0; i < PLAYER_BOIDS; i++) {
-        playerControlledFlock.addBoid(new PlayerControlledBoid(width/2, height/2));
-    }
+    flocks = IntStream.range(0, N_FLOCKS)
+                      .mapToObj(i -> new Flock(generateRandomColor(), BOIDS, i == 0)) // Create flocks
+                      .toArray(Flock[]::new);
 }
 
 void draw() {
     background(50);
-    regularFlock.run();
-    playerControlledFlock.run();
+
+    // Run all flocks
+    Arrays.stream(flocks).forEach(Flock::run);
+
+    renderCounter(flocks[0].boids.size(), 20, height - 20); // Player flock size
+
+    // Sum of all other flocks
+    int sum = Arrays.stream(flocks, 1, N_FLOCKS)
+                    .mapToInt(flock -> flock.boids.size())
+                    .sum();
+    renderCounter(sum, width - 40, height - 20);
+}
+
+color generateRandomColor() {
+    return color(random(255), random(255), random(255));
 }
