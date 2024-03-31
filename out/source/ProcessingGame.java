@@ -73,8 +73,8 @@ public int GetEnemyCount(Flock[] flocks) {
                  .mapToInt(Flock::getNumBoids)
                  .sum();
 }
-    
-    
+
+
 
 
 /**
@@ -257,84 +257,84 @@ class Boid {
     * Renders the shape of the boid.
     */
     private void renderBoidShape() {
-        beginShape(TRIANGLES);
+        beginShape();
         vertex(0, -radius * 2);
-        vertex( -radius, radius * 2);
-        vertex(radius, radius * 2);
-        endShape();
+        bezierVertex( - radius, -radius, -radius * 2, radius, 0, radius * 2);
+        bezierVertex(radius * 2, radius, radius, -radius, 0, -radius * 2);
+        endShape(CLOSE);
     }
-    
-    /**
-    * Wraps the boid around the borders of the screen.
-    */
-    protected void wrapAroundBorders() {
-        if (position.x < -radius || position.x > width + radius) {
-            position.x = (position.x + width) % width;
+        
+        /**
+        * Wraps the boid around the borders of the screen.
+        */
+        protected void wrapAroundBorders() {
+            if (position.x < - radius || position.x > width + radius) {
+                position.x = (position.x + width) % width;
+            }
+            if (position.y < - radius || position.y > height + radius) {
+                position.y = (position.y + height) % height;
+            }
         }
-        if (position.y < -radius || position.y > height + radius) {
-            position.y = (position.y + height) % height;
+        
+        /**
+        * Calculates the steering force to seek a target position.
+        * 
+        * @param target The target position to seek.
+        * @return The steering force.
+        */
+        protected PVector seekTarget(PVector target) {
+            PVector desired = PVector.sub(target, position);
+            desired.normalize();
+            desired.mult(maxSpeed);
+            PVector steer = PVector.sub(desired, velocity);
+            steer.limit(maxForce);
+            return steer;
         }
-    }
-    
-    /**
-    * Calculates the steering force to seek a target position.
-    * 
-    * @param target The target position to seek.
-    * @return The steering force.
-    */
-    protected PVector seekTarget(PVector target) {
-        PVector desired = PVector.sub(target, position);
-        desired.normalize();
-        desired.mult(maxSpeed);
-        PVector steer = PVector.sub(desired, velocity);
-        steer.limit(maxForce);
-        return steer;
-    }
-    
-    /**
-    * Checks for collision with other flocks and handles the collision behavior.
-    * 
-    * @param flocks The array of all flocks in the simulation.
-    */
-
-    protected void checkFlockCollision(Flock[] flocks) {
-        Flock currentFlock = this.flock;
-
-        Optional<Flock> otherFlockOpt = Arrays.stream(flocks)
-            .filter(otherFlock -> otherFlock != currentFlock)
-            .filter(otherFlock -> {
+        
+        /**
+        * Checks for collision with other flocks and handles the collision behavior.
+        * 
+        * @param flocks The array of all flocks in the simulation.
+        */
+        
+        protected void checkFlockCollision(Flock[] flocks) {
+            Flock currentFlock = this.flock;
+            
+            Optional<Flock> otherFlockOpt = Arrays.stream(flocks)
+               .filter(otherFlock -> otherFlock != currentFlock)
+               .filter(otherFlock -> {
                 PVector otherFlockCenter = getLargestFlockCenter(otherFlock);
                 float distance = PVector.dist(position, otherFlockCenter);
                 return distance < 50.0f; // Adjust this value as needed
             })
-            .filter(otherFlock -> currentFlock.getNumBoids() < otherFlock.getNumBoids())
-            .findFirst();
-
-        if (otherFlockOpt.isPresent()) {
-            Flock otherFlock = otherFlockOpt.get();
-            currentFlock.getBoids().remove(this);
-            otherFlock.addBoid((otherFlock == flocks[0]) ? new PlayerControlledBoid(position.x, position.y, flocks[0]) : this);
-
-            this.flock = otherFlock;
-            this.flockColor = otherFlock.flockColor;
+           .filter(otherFlock -> currentFlock.getNumBoids() < otherFlock.getNumBoids())
+               .findFirst();
+            
+            if (otherFlockOpt.isPresent()) {
+                Flock otherFlock = otherFlockOpt.get();
+                currentFlock.getBoids().remove(this);
+                otherFlock.addBoid((otherFlock == flocks[0]) ? new PlayerControlledBoid(position.x, position.y, flocks[0]) : this);
+                
+                this.flock = otherFlock;
+                this.flockColor = otherFlock.flockColor;
+            }
+        }
+        /**
+        * Calculates the center position of a flock.
+        * 
+        * @param flock The flock to calculate the center position for.
+        * @return The center position of the flock.
+        */
+        private PVector getLargestFlockCenter(Flock flock) {
+            PVector center = new PVector(0, 0);
+            List<Boid> boids = flock.getBoids();
+            for (Boid boid : boids) {
+                center.add(boid.position);
+            }
+            center.div(boids.size());
+            return center;
         }
     }
-    /**
-    * Calculates the center position of a flock.
-    * 
-    * @param flock The flock to calculate the center position for.
-    * @return The center position of the flock.
-    */
-    private PVector getLargestFlockCenter(Flock flock) {
-        PVector center = new PVector(0, 0);
-        List<Boid> boids = flock.getBoids();
-        for (Boid boid : boids) {
-            center.add(boid.position);
-        }
-        center.div(boids.size());
-        return center;
-    }
-}
 PFont customFont;
 
 public void setupCounter() {
