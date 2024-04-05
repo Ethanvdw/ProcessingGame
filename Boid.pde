@@ -6,6 +6,7 @@ import java.util.Optional;
 * Represents a boid in a flocking simulation.
 */
 class Boid {
+    PImage boidImage;
     private PVector position;
     private PVector velocity;
     private PVector acceleration;
@@ -32,6 +33,7 @@ class Boid {
         maxForce = 0.03f;
         this.flock = flock;
         this.flockColor = flock.flockColor;
+        boidImage = chooseRandomSprite("ships.png", 4, 4);	
     }
     
     /**
@@ -177,15 +179,29 @@ class Boid {
     /**
     * Renders the boid on the screen.
     */
+    // protected void render() {
+    //     float theta = velocity.heading2D() + radians(90);
+    //     fill(flockColor);
+    //     stroke(255);
+    //     pushMatrix();
+    //     translate(position.x, position.y);
+    //     rotate(theta);
+    //     renderBoidShape();
+    //     popMatrix();
+    // }
+
     protected void render() {
         float theta = velocity.heading2D() + radians(90);
-        fill(flockColor);
-        stroke(255);
+        float scaleValue = 0.5; // Change this value to scale the image
+        imageMode(CENTER);
+        tint(flockColor); // Apply the tint
         pushMatrix();
         translate(position.x, position.y);
         rotate(theta);
-        renderBoidShape();
+        scale(scaleValue);
+        image(boidImage, 0, 0);
         popMatrix();
+        noTint(); // Remove the tint for other drawings
     }
     
     /**
