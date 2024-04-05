@@ -7,7 +7,7 @@ class PlayerControlledBoid extends Boid {
     void run(ArrayList<Boid> boids) {
         PVector mousePosition = getMousePosition();
         PVector steeringForce = getSteeringForce(boids, mousePosition);
-        applyForce(steeringForce); 
+        applyForce(steeringForce);
         updatePosition();
         wrapAroundBorders();
         render();
@@ -43,6 +43,7 @@ class PlayerControlledBoid extends Boid {
     private PVector getFlockingForce(ArrayList<Boid> boids) {
         PVector alignmentForce = getAlignmentForce(boids);
         PVector cohesionForce = getCohesionForce(boids);
+        
         alignmentForce.mult(1.0f);
         cohesionForce.mult(1.0f);
         

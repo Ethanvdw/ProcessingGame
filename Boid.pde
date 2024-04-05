@@ -1,23 +1,23 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
-
 
 /**
 * Represents a boid in a flocking simulation.
 */
 class Boid {
     private PVector position;
-    protected PVector velocity;
-    protected PVector acceleration;
+    private PVector velocity;
+    private PVector acceleration;
     private final float radius;
     private final float maxForce;
     private final float maxSpeed;
-    Flock flock;
+    private Flock flock;
     private color flockColor;
     
     /**
     * Constructs a new Boid object.
-    * 
+    *
     * @param x     The initial x-coordinate of the boid.
     * @param y     The initial y-coordinate of the boid.
     * @param flock The flock that the boid belongs to.
@@ -27,7 +27,7 @@ class Boid {
         float angle = random(TWO_PI);
         velocity = new PVector(cos(angle), sin(angle));
         position = new PVector(x, y);
-        radius = 2.0f;
+        radius = 4.0f;
         maxSpeed = 2.0f;
         maxForce = 0.03f;
         this.flock = flock;
@@ -36,11 +36,11 @@ class Boid {
     
     /**
     * Runs the boid's behavior for each frame.
-    * 
+    *
     * @param boids The list of all boids in the simulation.
     */
     void run(ArrayList<Boid> boids) {
-        flock(boids);
+        applyFlockingBehaviors(boids);
         updatePosition();
         wrapAroundBorders();
         render();
@@ -48,7 +48,7 @@ class Boid {
     
     /**
     * Applies a force to the boid.
-    * 
+    *
     * @param force The force to be applied.
     */
     protected void applyForce(PVector force) {
@@ -67,16 +67,19 @@ class Boid {
     
     /**
     * Calculates and applies the flocking forces to the boid.
-    * 
+    *
     * @param boids The list of all boids in the simulation.
     */
-    private void flock(ArrayList<Boid> boids) {
+    private void applyFlockingBehaviors(ArrayList<Boid> boids) {
         PVector separationForce = getSeparationForce(boids);
         PVector alignmentForce = getAlignmentForce(boids);
         PVector cohesionForce = getCohesionForce(boids);
+        
+        // Adjust the force magnitudes as needed
         separationForce.mult(1.5f);
         alignmentForce.mult(1.0f);
         cohesionForce.mult(1.0f);
+        
         applyForce(separationForce);
         applyForce(alignmentForce);
         applyForce(cohesionForce);
@@ -84,7 +87,7 @@ class Boid {
     
     /**
     * Calculates the separation force to avoid crowding with other boids.
-    * 
+    *
     * @param boids The list of all boids in the simulation.
     * @return The separation force.
     */
@@ -92,6 +95,7 @@ class Boid {
         float desiredSeparation = 25.0f;
         PVector steer = new PVector(0, 0);
         int count = 0;
+        
         for (Boid other : boids) {
             float distance = PVector.dist(position, other.position);
             if (distance > 0 && distance < desiredSeparation) {
@@ -102,18 +106,20 @@ class Boid {
                 count++;
             }
         }
+        
         if (count > 0) {
             steer.div(count);
             steer.setMag(maxSpeed);
             steer.sub(velocity);
             steer.limit(maxForce);
         }
+        
         return steer;
     }
     
     /**
     * Calculates the alignment force to match the velocity of nearby boids.
-    * 
+    *
     * @param boids The list of all boids in the simulation.
     * @return The alignment force.
     */
@@ -121,6 +127,7 @@ class Boid {
         float neighborDistance = 50.0f;
         PVector sum = new PVector(0, 0);
         int count = 0;
+        
         for (Boid other : boids) {
             float distance = PVector.dist(position, other.position);
             if (distance > 0 && distance < neighborDistance) {
@@ -128,6 +135,7 @@ class Boid {
                 count++;
             }
         }
+        
         if (count > 0) {
             sum.div(count);
             sum.setMag(maxSpeed);
@@ -141,7 +149,7 @@ class Boid {
     
     /**
     * Calculates the cohesion force to move towards the center of nearby boids.
-    * 
+    *
     * @param boids The list of all boids in the simulation.
     * @return The cohesion force.
     */
@@ -149,6 +157,7 @@ class Boid {
         float neighborDistance = 50.0f;
         PVector sum = new PVector(0, 0);
         int count = 0;
+        
         for (Boid other : boids) {
             float distance = PVector.dist(position, other.position);
             if (distance > 0 && distance < neighborDistance) {
@@ -156,6 +165,7 @@ class Boid {
                 count++;
             }
         }
+        
         if (count > 0) {
             sum.div(count);
             return seekTarget(sum);
@@ -184,79 +194,69 @@ class Boid {
     private void renderBoidShape() {
         beginShape();
         vertex(0, -radius * 2);
-        bezierVertex( - radius, -radius, -radius * 2, radius, 0, radius * 2);
+        bezierVertex( -radius, -radius, -radius * 2, radius, 0, radius * 2);
         bezierVertex(radius * 2, radius, radius, -radius, 0, -radius * 2);
         endShape(CLOSE);
     }
-        
-        /**
-        * Wraps the boid around the borders of the screen.
-        */
-        protected void wrapAroundBorders() {
-            if (position.x < - radius || position.x > width + radius) {
-                position.x = (position.x + width) % width;
-            }
-            if (position.y < - radius || position.y > height + radius) {
-                position.y = (position.y + height) % height;
-            }
+    
+    /**
+    * Wraps the boid around the borders of the screen.
+    */
+    protected void wrapAroundBorders() {
+        if (position.x < - radius || position.x > width + radius) {
+            position.x = (position.x + width) % width;
         }
-        
-        /**
-        * Calculates the steering force to seek a target position.
-        * 
-        * @param target The target position to seek.
-        * @return The steering force.
-        */
-        protected PVector seekTarget(PVector target) {
-            PVector desired = PVector.sub(target, position);
-            desired.normalize();
-            desired.mult(maxSpeed);
-            PVector steer = PVector.sub(desired, velocity);
-            steer.limit(maxForce);
-            return steer;
+        if (position.y < - radius || position.y > height + radius) {
+            position.y = (position.y + height) % height;
         }
-        
-        /**
-        * Checks for collision with other flocks and handles the collision behavior.
-        * 
-        * @param flocks The array of all flocks in the simulation.
-        */
-        
+    }
+    
+    /**
+    * Calculates the steering force to seek a target position.
+    *
+    * @param target The target position to seek.
+    * @return The steering force.
+    */
+    protected PVector seekTarget(PVector target) {
+        PVector desired = PVector.sub(target, position);
+        desired.normalize();
+        desired.mult(maxSpeed);
+        PVector steer = PVector.sub(desired, velocity);
+        steer.limit(maxForce);
+        return steer;
+    }
+    
+    /**
+    * Checks for collision with other flocks and handles the collision behavior.
+    *
+    * @param flocks The array of all flocks in the simulation.
+    */
         protected void checkFlockCollision(Flock[] flocks) {
             Flock currentFlock = this.flock;
-            
+
+            // Filters to find the first boid that is:
+            // 1. In a different flock
+            // 2. Within a certain distance
+            // 3. In a flock with more boids
             Optional<Flock> otherFlockOpt = Arrays.stream(flocks)
-               .filter(otherFlock -> otherFlock != currentFlock)
-               .filter(otherFlock -> {
-                PVector otherFlockCenter = getLargestFlockCenter(otherFlock);
-                float distance = PVector.dist(position, otherFlockCenter);
-                return distance < 50.0f; // Adjust this value as needed
-            })
-           .filter(otherFlock -> currentFlock.getNumBoids() < otherFlock.getNumBoids())
-               .findFirst();
-            
+                .filter(otherFlock -> otherFlock != currentFlock)
+                .filter(otherFlock -> {
+                    return otherFlock.getBoids().stream().anyMatch(otherBoid -> {
+                        float distance = PVector.dist(position, otherBoid.position);
+                        return distance < 5.0f; // Adjust this value as needed
+                    });
+                })
+                .filter(otherFlock -> currentFlock.getNumBoids() < otherFlock.getNumBoids())
+                .findFirst();
+
             if (otherFlockOpt.isPresent()) {
                 Flock otherFlock = otherFlockOpt.get();
                 currentFlock.getBoids().remove(this);
-                otherFlock.addBoid((otherFlock == flocks[0]) ? new PlayerControlledBoid(position.x, position.y, flocks[0]) : this);
-                
+                otherFlock.addBoid((otherFlock == flocks[0]) ? new PlayerControlledBoid(position.x, position.y, flocks[0]) : new Boid(position.x, position.y, otherFlock));
+
                 this.flock = otherFlock;
                 this.flockColor = otherFlock.flockColor;
             }
         }
-        /**
-        * Calculates the center position of a flock.
-        * 
-        * @param flock The flock to calculate the center position for.
-        * @return The center position of the flock.
-        */
-        private PVector getLargestFlockCenter(Flock flock) {
-            PVector center = new PVector(0, 0);
-            List<Boid> boids = flock.getBoids();
-            for (Boid boid : boids) {
-                center.add(boid.position);
-            }
-            center.div(boids.size());
-            return center;
-        }
+
     }
