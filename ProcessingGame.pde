@@ -172,7 +172,9 @@ int getEnemyCount(Flock[] flocks) {
 void checkGameStatus() {
     if (flocks[0].getNumBoids() == 0) {
         displayMessage("You lose!", width / 2, height / 2);
+        noLoop(); // Pause the sketch
     } else if (getEnemyCount(flocks) == 0) {
         displayMessage("You win!", width / 2, height / 2);
+        noLoop(); // Pause the sketch
     }
 }

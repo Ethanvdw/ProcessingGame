@@ -27,6 +27,13 @@ import java.io.IOException;
 
 public class ProcessingGame extends PApplet {
 
+/**
+ * This is the main file of the Processing game.
+ * It contains the setup and draw functions, as well as other helper functions
+ * for initializing flocks, spawners, handling collisions, rendering, and checking game status.
+ */
+
+
 
 
 
@@ -44,6 +51,10 @@ int delayFrames = 180;
 
 ArrayList<BoidSpawner> boidSpawners = new ArrayList<>();
 
+/**
+ * The setup function is called once when the program starts.
+ * It initializes the game window, crosshair, counters, flocks, and spawners.
+ */
 public void setup() {
     frameRate(80);
     /* size commented out by preprocessor */;
@@ -54,7 +65,11 @@ public void setup() {
     initializeSpawners();
 }
 
-
+/**
+ * The draw function is called continuously in a loop.
+ * It updates the crosshair, renders spawners, runs flocks, handles boid collisions,
+ * handles boid spawner collisions, renders counters, and checks the game status.
+ */
 public void draw() {
     background(0);
     crosshair.update();
@@ -66,16 +81,29 @@ public void draw() {
     checkGameStatus();
 }
 
+/**
+ * Renders all the spawners by calling the render function on each spawner.
+ */
 public void renderSpawners() {
     Arrays.stream(boidSpawners.toArray())
        .forEach(spawner -> ((BoidSpawner) spawner).render());
 }
 
+/**
+ * Initializes the spawners by creating a specified number of boid spawners
+ * with random positions and a given sprite image.
+ */
 public void initializeSpawners() {
     IntStream.range(0, SPAWNERS)
        .forEach(i -> boidSpawners.add(new BoidSpawner(random(width), random(height), "stars.png", 4, 1)));
 }
 
+/**
+ * Handles collisions between boids and boid spawners.
+ * For each flock, it checks if any boid collides with a spawner.
+ * If a collision occurs, a new boid is spawned from the spawner and added to the flock.
+ * The collided spawner is removed, and new spawners are created.
+ */
 public void handleBoidSpawnerCollisions() {
     for (Flock flock : flocks) {
         List<Boid> boidsCopy = new ArrayList<>(flock.getBoids());
@@ -98,10 +126,19 @@ public void handleBoidSpawnerCollisions() {
     }
 }
 
+/**
+ * Creates a new boid spawner with a random position and a given sprite image.
+ * @return The newly created boid spawner.
+ */
 public BoidSpawner createNewSpawner() {
     return new BoidSpawner(random(width), random(height), "stars.png", 4, 1);
 }
 
+/**
+ * Initializes the flocks by creating an array of flocks.
+ * The first flock is the player flock, and the rest are enemy flocks.
+ * Each flock is assigned a random color and a random sprite image.
+ */
 public void initializeFlocks() {
     flocks = new Flock[N_FLOCKS];
     
@@ -111,12 +148,20 @@ public void initializeFlocks() {
        .forEach(i -> flocks[i] = new Flock(generateRandomColor(), chooseRandomSprite("ships.png", 4, 4), BOIDS, false));
 }
 
+/**
+ * Runs the update and render functions for each flock in the flocks array.
+ */
 public void runFlocks() {
     Flock[] flocksCopy = Arrays.copyOf(flocks, flocks.length);
     Arrays.stream(flocksCopy)
        .forEach(Flock ::  run);
 }
 
+/**
+ * Handles collisions between boids within the flocks.
+ * It checks for collisions only after a certain number of frames (delayFrames) have passed.
+ * For each boid in the flocks, it checks for collisions with other boids in the flocks.
+ */
 public void handleBoidCollisions() {
     if (frameCount >= delayFrames) {
         List<Boid> boidsToCheck = Arrays.stream(flocks)
@@ -127,11 +172,20 @@ public void handleBoidCollisions() {
     }
 }
 
+/**
+ * Renders the counters for the player flock's boids and the enemy flocks' boids.
+ * The counters display the number of boids in each flock.
+ */
 public void renderCounters() {
     renderCounter(flocks[0].getNumBoids(), 20, height - 20);
     renderCounter(getEnemyCount(flocks), width - 40, height - 20);
 }
 
+/**
+ * Calculates and returns the total number of boids in the enemy flocks.
+ * @param flocks The array of flocks.
+ * @return The total number of boids in the enemy flocks.
+ */
 public int getEnemyCount(Flock[] flocks) {
     return Arrays.stream(flocks)
        .filter(flock -> !flock.isPlayerFlock())
@@ -139,11 +193,18 @@ public int getEnemyCount(Flock[] flocks) {
        .sum();
 }
 
+/**
+ * Checks the game status by checking the number of boids in the player flock and the enemy flocks.
+ * If the player flock has no boids, it displays a "You lose!" message.
+ * If all enemy flocks have no boids, it displays a "You win!" message.
+ */
 public void checkGameStatus() {
     if (flocks[0].getNumBoids() == 0) {
         displayMessage("You lose!", width / 2, height / 2);
+        noLoop(); // Pause the sketch
     } else if (getEnemyCount(flocks) == 0) {
         displayMessage("You win!", width / 2, height / 2);
+        noLoop(); // Pause the sketch
     }
 }
 
@@ -151,8 +212,8 @@ public void checkGameStatus() {
 
 
 /**
-* Represents a boid in a flocking simulation.
-*/
+ * Represents a boid in a flocking simulation.
+ */
 class Boid {
     PImage boidImage;
     private PVector position;
@@ -165,12 +226,12 @@ class Boid {
     private int flockColor;
     
     /**
-    * Constructs a new Boid object.
-    *
-    * @param x     The initial x-coordinate of the boid.
-    * @param y     The initial y-coordinate of the boid.
-    * @param flock The flock that the boid belongs to.
-    */
+     * Constructs a new Boid object.
+     *
+     * @param x     The initial x-coordinate of the boid.
+     * @param y     The initial y-coordinate of the boid.
+     * @param flock The flock that the boid belongs to.
+     */
     Boid(float x, float y, Flock flock) {
         acceleration = new PVector(0, 0);
         float angle = random(TWO_PI);
@@ -185,10 +246,10 @@ class Boid {
     }
     
     /**
-    * Runs the boid's behavior for each frame.
-    *
-    * @param boids The list of all boids in the simulation.
-    */
+     * Runs the boid's behavior for each frame.
+     *
+     * @param boids The list of all boids in the simulation.
+     */
     public void run(ArrayList<Boid> boids) {
         applyFlockingBehaviors(boids);
         updatePosition();
@@ -197,17 +258,17 @@ class Boid {
     }
     
     /**
-    * Applies a force to the boid.
-    *
-    * @param force The force to be applied.
-    */
+     * Applies a force to the boid.
+     *
+     * @param force The force to be applied.
+     */
     protected void applyForce(PVector force) {
         acceleration.add(force);
     }
     
     /**
-    * Updates the position of the boid based on its velocity and acceleration.
-    */
+     * Updates the position of the boid based on its velocity and acceleration.
+     */
     protected void updatePosition() {
         velocity.add(acceleration);
         velocity.limit(maxSpeed);
@@ -216,10 +277,10 @@ class Boid {
     }
     
     /**
-    * Calculates and applies the flocking forces to the boid.
-    *
-    * @param boids The list of all boids in the simulation.
-    */
+     * Calculates and applies the flocking forces to the boid.
+     *
+     * @param boids The list of all boids in the simulation.
+     */
     private void applyFlockingBehaviors(ArrayList<Boid> boids) {
         PVector separationForce = getSeparationForce(boids);
         PVector alignmentForce = getAlignmentForce(boids);
@@ -236,11 +297,11 @@ class Boid {
     }
     
     /**
-    * Calculates the separation force to avoid crowding with other boids.
-    *
-    * @param boids The list of all boids in the simulation.
-    * @return The separation force.
-    */
+     * Calculates the separation force to avoid crowding with other boids.
+     *
+     * @param boids The list of all boids in the simulation.
+     * @return The separation force.
+     */
     protected PVector getSeparationForce(ArrayList<Boid> boids) {
         float desiredSeparation = 25.0f;
         PVector steer = new PVector(0, 0);
@@ -268,11 +329,11 @@ class Boid {
     }
     
     /**
-    * Calculates the alignment force to match the velocity of nearby boids.
-    *
-    * @param boids The list of all boids in the simulation.
-    * @return The alignment force.
-    */
+     * Calculates the alignment force to match the velocity of nearby boids.
+     *
+     * @param boids The list of all boids in the simulation.
+     * @return The alignment force.
+     */
     protected PVector getAlignmentForce(ArrayList<Boid> boids) {
         float neighborDistance = 50.0f;
         PVector sum = new PVector(0, 0);
@@ -298,11 +359,11 @@ class Boid {
     }
     
     /**
-    * Calculates the cohesion force to move towards the center of nearby boids.
-    *
-    * @param boids The list of all boids in the simulation.
-    * @return The cohesion force.
-    */
+     * Calculates the cohesion force to move towards the center of nearby boids.
+     *
+     * @param boids The list of all boids in the simulation.
+     * @return The cohesion force.
+     */
     protected PVector getCohesionForce(ArrayList<Boid> boids) {
         float neighborDistance = 50.0f;
         PVector sum = new PVector(0, 0);
@@ -325,6 +386,9 @@ class Boid {
     }
     
 
+    /**
+     * Renders the boid on the screen.
+     */
     protected void render() {
         float theta = velocity.heading2D() + radians(90);
         float scaleValue = 0.5f; // Change this value to scale the image
@@ -341,8 +405,8 @@ class Boid {
 
     
     /**
-    * Wraps the boid around the borders of the screen.
-    */
+     * Wraps the boid around the borders of the screen.
+     */
     protected void wrapAroundBorders() {
         if (position.x < - radius || position.x > width + radius) {
             position.x = (position.x + width) % width;
@@ -353,11 +417,11 @@ class Boid {
     }
     
     /**
-    * Calculates the steering force to seek a target position.
-    *
-    * @param target The target position to seek.
-    * @return The steering force.
-    */
+     * Calculates the steering force to seek a target position.
+     *
+     * @param target The target position to seek.
+     * @return The steering force.
+     */
     protected PVector seekTarget(PVector target) {
         PVector desired = PVector.sub(target, position);
         desired.normalize();
@@ -368,44 +432,44 @@ class Boid {
     }
     
     /**
-    * Checks for collision with other flocks and handles the collision behavior.
-    *
-    * @param flocks The array of all flocks in the simulation.
-    */
-        protected void checkFlockCollision(Flock[] flocks) {
-            Flock currentFlock = this.flock;
+     * Checks for collision with other flocks and handles the collision behavior.
+     *
+     * @param flocks The array of all flocks in the simulation.
+     */
+    protected void checkFlockCollision(Flock[] flocks) {
+        Flock currentFlock = this.flock;
 
-            // Filters to find the first boid that is:
-            // 1. In a different flock
-            // 2. Within a certain distance
-            // 3. In a flock with more boids
-            Optional<Flock> otherFlockOpt = Arrays.stream(flocks)
-                .filter(otherFlock -> otherFlock != currentFlock)
-                .filter(otherFlock -> {
-                    return otherFlock.getBoids().stream().anyMatch(otherBoid -> {
-                        float distance = PVector.dist(position, otherBoid.position);
-                        return distance < 5.0f; // Adjust this value as needed
-                    });
-                })
-                .filter(otherFlock -> currentFlock.getNumBoids() < otherFlock.getNumBoids())
-                .findFirst();
+        // Filters to find the first boid that is:
+        // 1. In a different flock
+        // 2. Within a certain distance
+        // 3. In a flock with more boids
+        Optional<Flock> otherFlockOpt = Arrays.stream(flocks)
+            .filter(otherFlock -> otherFlock != currentFlock)
+            .filter(otherFlock -> {
+                return otherFlock.getBoids().stream().anyMatch(otherBoid -> {
+                    float distance = PVector.dist(position, otherBoid.position);
+                    return distance < 5.0f; // Adjust this value as needed
+                });
+            })
+            .filter(otherFlock -> currentFlock.getNumBoids() < otherFlock.getNumBoids())
+            .findFirst();
 
-            if (otherFlockOpt.isPresent()) {
-                Flock otherFlock = otherFlockOpt.get();
-                currentFlock.getBoids().remove(this);
+        if (otherFlockOpt.isPresent()) {
+            Flock otherFlock = otherFlockOpt.get();
+            currentFlock.getBoids().remove(this);
 
-                if (otherFlock.isPlayerFlock) {
-                    otherFlock.addBoid(new PlayerControlledBoid(position.x, position.y, flocks[0]));
-                } else {
-                    otherFlock.addBoid(new Boid(position.x, position.y, otherFlock));
-                }
-
-                this.flock = otherFlock;
-                this.flockColor = otherFlock.flockColor;
+            if (otherFlock.isPlayerFlock) {
+                otherFlock.addBoid(new PlayerControlledBoid(position.x, position.y, flocks[0]));
+            } else {
+                otherFlock.addBoid(new Boid(position.x, position.y, otherFlock));
             }
-        }
 
+            this.flock = otherFlock;
+            this.flockColor = otherFlock.flockColor;
+        }
     }
+
+}
 PFont customFont;
 
 public void setupCounter() {
@@ -478,22 +542,39 @@ class BoidSpawner {
                .forEach(spawner -> ((BoidSpawner) spawner).render());
         }
     }
+/**
+ * The Crosshair class represents a crosshair object in a game.
+ * It displays a crosshair image at the current mouse position.
+ */
 class Crosshair {
     PImage sprite;
     int x, y;
     
+    /**
+     * Constructs a new Crosshair object.
+     * It loads the crosshair image, resizes it to 25x25 pixels, and hides the cursor.
+     */
     Crosshair() {
         sprite = loadImage("crosshair.png");
         sprite.resize(25, 25);
         noCursor();
     }
     
+    /**
+     * Updates the position of the crosshair based on the current mouse position.
+     * It displays the crosshair image at the updated position.
+     */
     public void update() {
         x = mouseX;
         y = mouseY;
         image(sprite, x, y);
     }
 }
+/**
+ * The Flock class represents a group of boids.
+ * A flock has a color, an image for the boids, and a flag indicating whether it is a player-controlled flock.
+ * It maintains a list of boids and provides methods to initialize and manipulate the flock.
+ */
 
 
 
@@ -503,6 +584,14 @@ class Flock {
     private final PImage boidImage;
     private final boolean isPlayerFlock;
     
+    /**
+     * Constructs a new Flock object with the specified color, boid image, number of boids, and player-controlled flag.
+     * Initializes the list of boids and adds the specified number of boids to the flock.
+     * @param flockColor the color of the flock
+     * @param boidImage the image for the boids
+     * @param numBoids the number of boids to initialize in the flock
+     * @param isPlayerFlock a flag indicating whether the flock is player-controlled
+     */
     Flock(int flockColor, PImage boidImage ,int numBoids, boolean isPlayerFlock) {
         boids = new ArrayList<>();
         this.flockColor = flockColor;
@@ -511,6 +600,13 @@ class Flock {
         initializeBoids(numBoids, isPlayerFlock);
     }
     
+    /**
+     * Initializes the flock with the specified number of boids.
+     * The boids are initially positioned at the center of the screen.
+     * If the flock is player-controlled, it creates PlayerControlledBoid objects, otherwise it creates Boid objects.
+     * @param numBoids the number of boids to initialize in the flock
+     * @param isPlayerControlled a flag indicating whether the boids are player-controlled
+     */
     public void initializeBoids(int numBoids, boolean isPlayerControlled) {
         int boidX = width / 2;
         int boidY = height / 2;
@@ -520,32 +616,70 @@ class Flock {
         });
     }
     
+    /**
+     * Runs the flock by updating and rendering each boid in the flock.
+     */
     public void run() {
         ArrayList<Boid> boidsArrayList = new ArrayList<>(boids);
         boids.forEach(boid -> boid.run(boidsArrayList));
     }
     
+    /**
+     * Adds a boid to the flock.
+     * @param boid the boid to add
+     */
     public void addBoid(Boid boid) {
         boids.add(boid);
     }
     
+    /**
+     * Returns the list of boids in the flock.
+     * @return the list of boids
+     */
     public List<Boid> getBoids() {
         return boids;
     }
     
+    /**
+     * Returns the number of boids in the flock.
+     * @return the number of boids
+     */
     public int getNumBoids() {
         return boids.size();
     }
     
+    /**
+     * Checks if the flock is player-controlled.
+     * @return true if the flock is player-controlled, false otherwise
+     */
     public boolean isPlayerFlock() {
         return isPlayerFlock;
     }
 }
+/**
+ * The PlayerControlledBoid class represents a boid that is controlled by the player.
+ * It extends the Boid class and overrides the run method to implement player-controlled behavior.
+ */
 class PlayerControlledBoid extends Boid {
+    
+    /**
+     * Constructs a new PlayerControlledBoid object with the specified position and flock.
+     * 
+     * @param x     The x-coordinate of the boid's position.
+     * @param y     The y-coordinate of the boid's position.
+     * @param flock The flock that the boid belongs to.
+     */
     PlayerControlledBoid(float x, float y, Flock flock) {
         super(x, y, flock);
     }
     
+    /**
+     * Overrides the run method of the Boid class to implement player-controlled behavior.
+     * It calculates the steering force based on the mouse position and applies it to the boid.
+     * It also updates the position, wraps around the borders, and renders the boid.
+     * 
+     * @param boids The list of all boids in the flock.
+     */
     @Override public 
     void run(ArrayList<Boid> boids) {
         PVector mousePosition = getMousePosition();
@@ -556,6 +690,12 @@ class PlayerControlledBoid extends Boid {
         render();
     }
     
+    /**
+     * Returns the current mouse position as a PVector object.
+     * If the mouse is not on the screen, it returns null.
+     * 
+     * @return The current mouse position as a PVector object, or null if the mouse is not on the screen.
+     */
     private PVector getMousePosition() {
         if (isMouseOnScreen()) {
             return new PVector(mouseX, mouseY);
@@ -563,10 +703,25 @@ class PlayerControlledBoid extends Boid {
         return null;
     }
     
+    /**
+     * Checks if the mouse is on the screen.
+     * 
+     * @return true if the mouse is on the screen, false otherwise.
+     */
     private boolean isMouseOnScreen() {
         return mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height;
     }
     
+    /**
+     * Calculates the steering force for the boid based on the mouse position.
+     * If the mouse is on the screen, it seeks the mouse position.
+     * Otherwise, it gets the flocking force from the other boids.
+     * It also adds separation force to the steering force.
+     * 
+     * @param boids         The list of all boids in the flock.
+     * @param mousePosition The current mouse position.
+     * @return The steering force for the boid.
+     */
     private PVector getSteeringForce(ArrayList<Boid> boids, PVector mousePosition) {
         PVector steeringForce = new PVector(0, 0);
         
@@ -583,6 +738,14 @@ class PlayerControlledBoid extends Boid {
         return steeringForce;
     }
     
+    /**
+     * Calculates the flocking force for the boid based on the other boids in the flock.
+     * It gets the alignment force and cohesion force from the other boids.
+     * It also adds the alignment force and cohesion force to the flocking force.
+     * 
+     * @param boids The list of all boids in the flock.
+     * @return The flocking force for the boid.
+     */
     private PVector getFlockingForce(ArrayList<Boid> boids) {
         PVector alignmentForce = getAlignmentForce(boids);
         PVector cohesionForce = getCohesionForce(boids);
@@ -597,20 +760,30 @@ class PlayerControlledBoid extends Boid {
         return flockingForce;
     }
 }
-
 /**
-* Generates a random color.
-* @return The randomly generated color.
-*/
+ * Generates a random color.
+ * 
+ * @return The randomly generated color.
+ */
 public int generateRandomColor() {
     return color(random(255), random(255), random(255));
 }
 
-
+/**
+ * Sets up the cursor to be hidden.
+ */
 public void cursorSetup() {
     noCursor();
 }
 
+/**
+ * Chooses a random sprite from a sprite sheet.
+ * 
+ * @param filename The filename of the sprite sheet.
+ * @param rows The number of rows in the sprite sheet.
+ * @param cols The number of columns in the sprite sheet.
+ * @return The randomly chosen sprite.
+ */
 public PImage chooseRandomSprite(String filename, int rows, int cols) {
     PImage spriteSheet = loadImage(filename);
     int totalSprites = rows * cols;
