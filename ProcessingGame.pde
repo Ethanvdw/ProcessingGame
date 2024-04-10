@@ -29,7 +29,7 @@ ArrayList<BoidSpawner> boidSpawners = new ArrayList<>();
 void setup() {
     frameRate(80);
     size(800, 800);
-    surface.setTitle("Flock Off");
+    surface.setTitle("Flocker");
     crosshair = new Crosshair(); 
     setupCounter();
     initializeFlocks();
