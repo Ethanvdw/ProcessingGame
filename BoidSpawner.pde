@@ -1,3 +1,6 @@
+/**
+ * The BoidSpawner class represents a spawner object that spawns boids in a game.
+ */
 class BoidSpawner {
     private PVector position;
     private static final float SPAWNER_SIZE = 25; // Fixed size for all spawners
@@ -9,6 +12,15 @@ class BoidSpawner {
     private int frameCounter; // Counts the number of draw calls since the last frame change
     private int rows, cols; // The number of rows and columns in the sprite sheet
 
+    /**
+     * Constructs a new BoidSpawner object with the specified position, sprite sheet, and dimensions.
+     * 
+     * @param x                  The x-coordinate of the spawner's position.
+     * @param y                  The y-coordinate of the spawner's position.
+     * @param spriteSheetFilename The filename of the sprite sheet image.
+     * @param rows               The number of rows in the sprite sheet.
+     * @param cols               The number of columns in the sprite sheet.
+     */
     BoidSpawner(float x, float y, String spriteSheetFilename, int rows, int cols) {
         this.position = new PVector(x, y);
         this.spriteSheet = loadImage(spriteSheetFilename);
@@ -21,6 +33,9 @@ class BoidSpawner {
         this.frameCounter = 0;
     }
 
+    /**
+     * Renders the spawner on the screen.
+     */
     void render() {
         int row = currentFrame / cols;
         int col = currentFrame % cols;
@@ -34,20 +49,34 @@ class BoidSpawner {
         }
     }
 
-
-
-        
-        boolean checkCollision(Boid boid) {
-            float distance = PVector.dist(position, boid.position);
-            return distance < SPAWNER_SIZE / 2 + boid.radius;
-        }
-        
-        Boid spawnBoid(float x, float y, Flock flock) {
-            return new Boid(x, y, flock);
-        }
-        
-        void renderSpawners() {
-            Arrays.stream(boidSpawners.toArray())
-               .forEach(spawner -> ((BoidSpawner) spawner).render());
-        }
+    /**
+     * Checks if a collision has occurred between the spawner and a boid.
+     * 
+     * @param boid The boid to check for collision with.
+     * @return True if a collision has occurred, false otherwise.
+     */
+    boolean checkCollision(Boid boid) {
+        float distance = PVector.dist(position, boid.position);
+        return distance < SPAWNER_SIZE / 2 + boid.radius;
     }
+
+    /**
+     * Spawns a new boid at the specified position and adds it to the given flock.
+     * 
+     * @param x     The x-coordinate of the boid's position.
+     * @param y     The y-coordinate of the boid's position.
+     * @param flock The flock to add the boid to.
+     * @return The newly spawned boid.
+     */
+    Boid spawnBoid(float x, float y, Flock flock) {
+        return new Boid(x, y, flock);
+    }
+
+    /**
+     * Renders all the spawners in the game.
+     */
+    void renderSpawners() {
+        Arrays.stream(boidSpawners.toArray())
+            .forEach(spawner -> ((BoidSpawner) spawner).render());
+    }
+}

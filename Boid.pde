@@ -181,7 +181,7 @@ class Boid {
      * Renders the boid on the screen.
      */
     protected void render() {
-        float theta = velocity.heading2D() + radians(90);
+        float theta = velocity.heading() + radians(90);
         float scaleValue = 0.5; // Change this value to scale the image
         imageMode(CENTER);
         tint(flockColor); // Apply the tint
